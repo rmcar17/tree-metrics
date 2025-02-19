@@ -1,0 +1,21 @@
+[project]
+name = "tree-metrics"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Robert McArthur", email = "robert.mcarthur@anu.edu.au" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "cogent3>=2024.12.19a2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9.6",
+]
