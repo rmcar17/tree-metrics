@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.10"
 dependencies = [
     "cogent3>=2024.12.19a2",
+    "matplotlib>=3.10.0",
 ]
 
 [build-system]
@@ -17,5 +18,7 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "mypy>=1.15.0",
+    "pytest>=8.3.4",
     "ruff>=0.9.6",
 ]
