@@ -6,15 +6,6 @@ import matplotlib.pyplot as plt
 from cogent3 import TreeNode, make_tree
 
 
-def triple_similarity(tree1: TreeNode, tree2: TreeNode) -> float:
-    triples_1 = make_triples(tree1)
-    triples_2 = make_triples(tree2)
-
-    assert len(triples_1) == len(triples_2)
-
-    return len(triples_1.intersection(triples_2)) / len(triples_1)
-
-
 @dataclass(frozen=True)
 class Triple:
     outgroup: str
@@ -25,6 +16,66 @@ class Triple:
 
     def __repr__(self) -> str:
         return f"({self.outgroup},({self.ingroup[0]},{self.ingroup[1]}));"
+
+
+def tree_triple_similarity(tree_1: TreeNode, tree_2: TreeNode) -> float:
+    triples_1 = make_triples(tree_1)
+    triples_2 = make_triples(tree_2)
+
+    return triple_similarity(triples_1, triples_2)
+
+
+def optimise_tree_triple_similarity(fixed: TreeNode, rerootable: TreeNode) -> float:
+    triples_fixed = make_triples(fixed)
+    best_similarity = -1
+
+    node: TreeNode
+    for node in list(rerootable.traverse(include_self=False)):
+        prospective_tree = root_at_node(node)
+        similarity = triple_similarity(triples_fixed, make_triples(prospective_tree))
+        # print(fixed)
+        # print(prospective_tree)
+        # print(similarity)
+        # print()
+        if similarity == 1.0:
+            return similarity
+        best_similarity = max(best_similarity, similarity)
+    assert best_similarity > 0
+    return best_similarity
+
+
+def root_at_node(node: TreeNode) -> TreeNode:
+    # Roots at edge connecting the node to its parent
+    if node.parent is None:
+        return node
+    if node.parent.parent is None:
+        return node.parent
+
+    tree_tuple = (
+        _root_at_node_helper(node.parent, node),
+        _root_at_node_helper(node, node.parent),
+    )
+    return make_tree(str(tree_tuple))
+
+
+def _root_at_node_helper(node: TreeNode, banned=None) -> tuple | str:
+    if node.is_tip():
+        return node.name
+
+    tree_components = []
+    for neighbour in node._getNeighboursExcept(banned):
+        component = _root_at_node_helper(neighbour, banned=node)
+        if isinstance(component, tuple) and len(component) == 1:
+            # Happens when crossing the root
+            component = component[0]
+        tree_components.append(component)
+
+    return tuple(tree_components)
+
+
+def triple_similarity(triples_1: set[Triple], triples_2: set[Triple]) -> float:
+    assert len(triples_1) == len(triples_2)
+    return len(triples_1.intersection(triples_2)) / len(triples_1)
 
 
 def make_triples(tree: TreeNode) -> set[Triple]:
